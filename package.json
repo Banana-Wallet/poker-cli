@@ -5,14 +5,22 @@
     "test": "hardhat test",
     "lint": "hardhat lint",
     "deploy": "hardhat run deploy/deploy.ts",
-    "verify": "hardhat run scripts/verify.js"
+    "verify": "hardhat run scripts/verify.js",
+    "aze": "ts-node index.ts"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
-    "hardhat": "^2.20.1"
+    "@typechain/ethers-v6": "^0.5.1",
+    "@typechain/hardhat": "^9.1.0",
+    "@types/yargs": "^17.0.32",
+    "hardhat": "^2.20.1",
+    "typechain": "^8.3.2"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^5.0.1",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "ethers": "^6.11.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3",
+    "yargs": "^17.7.2"
   }
 }

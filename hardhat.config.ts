@@ -11,6 +11,10 @@ const config: HardhatUserConfig = {
       url: 'https://polygon-mumbai.g.alchemy.com/v2/cNkdRWeB8oylSQJSA2V3Xev2PYh5YGr4',
       accounts:[`${process.env.PRIVATE_KEY}`]
     }
+  },
+  typechain: {
+    outDir: "types",
+    target: "ethers-v6",
   }
 };
 
