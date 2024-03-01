@@ -1,7 +1,7 @@
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { Game } from './game';
-import { Signer, ethers } from 'ethers';
+import { Signer, ethers, ripemd160 } from 'ethers';
 
 const pvKey1 = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
 const pvKey2 = '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d';
@@ -70,7 +70,8 @@ export const cliCommands = (game: Game) => {
         .command('action', 'Take some game action (raise, call, check)', actionBuilder, (argv) => {
             const wallet = getWallet(argv.playerNo as number);
             const action = argv.action as string;
-            const raiseAmount = argv.raiseAmount as number;
+            const raiseAmount = argv.raiseAmount as number || 0;
+            console.log('action and amount ', raiseAmount, action);
             game._action(wallet, action, raiseAmount);
         })
         .command('show', 'Show current hand', choosePlayer, (argv) => {

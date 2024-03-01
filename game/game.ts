@@ -37,14 +37,14 @@ export class Game {
         const pokerGameSingleton = gameContract.pokerGameSingleton.connect(signer);
         // taking action
         if (_action === 'check') {
-            const checkAction = ethers.toBigInt(0);
-            await pokerGameSingleton.playHand(checkAction, 0);
+            const checkAction = ethers.toBigInt(1);
+            await pokerGameSingleton.playHand(checkAction, ethers.toBigInt(0));
         } else if (_action === 'call') {
-            const callAction = ethers.toBigInt(1);
-            await pokerGameSingleton.playHand(callAction, 0);
+            const callAction = ethers.toBigInt(2);
+            await pokerGameSingleton.playHand(callAction, ethers.toBigInt(0));
         } else if (_action === 'raise') {
-            const raiseAction = ethers.toBigInt(2);
-            await pokerGameSingleton.playHand(raiseAction, _raiseAmount);
+            const raiseAction = ethers.toBigInt(3);
+            await pokerGameSingleton.playHand(raiseAction, ethers.toBigInt(_raiseAmount));
         } else {
             throw new Error('Invalid action');
         }
