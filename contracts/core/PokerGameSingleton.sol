@@ -149,14 +149,20 @@ contract PokerGameSingleton is IPokerGameSingleton {
         } else if (_action == PlayerAction.CHECK) {
             _checkAction();
         }
+
+        _endRound();
     }
 
     function _callAction() internal {
         PokerRound storage _currentPokerRound = pokerRounds[
             pokerTable.currentRound
         ];
-        uint128 _callAmount = _currentPokerRound.highestChips -
-            _currentPokerRound.chips[_currentPokerRound.currentTurn];
+        uint128 _callAmount = _currentPokerRound.highestChips - 
+        _currentPokerRound.chips[_currentPokerRound.currentTurn];
+        require(
+            chips[msg.sender] >= _callAmount,
+            "Not enough chips to call"
+        );
         chips[msg.sender] -= _callAmount;
         pokerTable.potValue += _callAmount;
     }
@@ -175,9 +181,8 @@ contract PokerGameSingleton is IPokerGameSingleton {
             chips[msg.sender] >= _callAmount + _raiseAmount,
             "Not enough chips to raise"
         );
-
-        chips[msg.sender] -= _callAmount + _raiseAmount;
-        pokerTable.potValue += _callAmount + _raiseAmount;
+        chips[msg.sender] -= (_callAmount + _raiseAmount);
+        pokerTable.potValue += (_callAmount + _raiseAmount);
         _currentPokerRound.highestChips =
             _currentPokerRound.chips[_currentPokerRound.currentTurn] +
             _callAmount +
@@ -199,6 +204,7 @@ contract PokerGameSingleton is IPokerGameSingleton {
         uint128[] memory _chips
     ) internal pure returns (bool _raise) {
         uint128 _chip = _chips[0];
+        _raise = true;
         for (uint i = 0; i < _chips.length; i++) {
             if (_chips[i] != _chip) {
                 _raise = false;
@@ -225,7 +231,9 @@ contract PokerGameSingleton is IPokerGameSingleton {
         uint _noOfPlayers = _currentPokerRound.gamePlayers.length;
         bool isLevelGame = _raiseOrNot(_currentPokerRound.chips);
 
+        // no raise
         if (isLevelGame) {
+            //! handle one case here that in case if teh current round of the table is 3 then we can move to the final card showdown
             if (_currentPokerRound.currentTurn == _noOfPlayers - 1) {
                 pokerTable.currentRound++;
                 pokerRounds[pokerTable.currentRound] = PokerRound({

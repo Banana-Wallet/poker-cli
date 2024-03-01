@@ -8,6 +8,8 @@ import { GameParams } from './game/types';
         pokerGameSingletonAddress: '0x5FbDB2315678afecb367f032d93F642f64180aa3',
         pokerGameProxyFactoryAddress: '0x5FbDB2315678afecb367f032d93F642f64180aa3'
     }
+
+    // define players over here and link those to terminal 
     const game = new Game(gameParams);
     cliCommands(game);
-})
+})()
