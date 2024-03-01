@@ -1,5 +1,6 @@
 import { PokerGameProxyFactory, PokerGameSingleton, PokerGameProxy__factory, PokerGameSingleton__factory, PokerGameProxyFactory__factory } from "../types";
 import { AddressLike, ethers, JsonRpcApiProvider } from "ethers";
+import { ethers as hardhatEthers } from "hardhat";
 import { GameParams } from "./types";
 
 export class Game {
@@ -22,6 +23,8 @@ export class Game {
     }
 
     _initGame = async () => {
+        const [player1, player2, player3, player4] = await hardhatEthers.getSigners();
+        this.pokerGameSingleton.initializeGame([player1.address, player2.address, player3.address, player4.address]);
         console.log('Game Initialized')
     }
 
