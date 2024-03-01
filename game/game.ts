@@ -28,25 +28,30 @@ export class Game {
     _initGame = async (signer: ethers.Wallet, players: string[]) => {
         const gameContract: GameContracts = this._getGameContracts(signer);
         const pokerGameSingleton = gameContract.pokerGameSingleton.connect(signer);
-        await pokerGameSingleton.initialize(players);
+        await pokerGameSingleton.initialize(players, { gasLimit: 10000000 });
     }
 
     _action = async (signer: ethers.Wallet, _action: string, _raiseAmount: number) => {
         console.log('take some actions');
+        console.log('action: ', _action);
         const gameContract: GameContracts = this._getGameContracts(signer);
         const pokerGameSingleton = gameContract.pokerGameSingleton.connect(signer);
         // taking action
         if (_action === 'check') {
             const checkAction = ethers.toBigInt(1);
-            await pokerGameSingleton.playHand(checkAction, ethers.toBigInt(0));
+            await pokerGameSingleton.playHand(checkAction, ethers.toBigInt(0), { gasLimit: 1000000 });
         } else if (_action === 'call') {
             const callAction = ethers.toBigInt(2);
-            await pokerGameSingleton.playHand(callAction, ethers.toBigInt(0));
+            await pokerGameSingleton.playHand(callAction, ethers.toBigInt(0), { gasLimit: 1000000 });
         } else if (_action === 'raise') {
             const raiseAction = ethers.toBigInt(3);
-            await pokerGameSingleton.playHand(raiseAction, ethers.toBigInt(_raiseAmount));
-        } else {
-            throw new Error('Invalid action');
+            await pokerGameSingleton.playHand(raiseAction, ethers.toBigInt(_raiseAmount), { gasLimit: 1000000 });
+        } else if (_action === 'big') {
+            const bigAction = ethers.toBigInt(5);
+            await pokerGameSingleton.playHand(bigAction, ethers.toBigInt(0), { gasLimit: 1000000 });
+        } else if (_action === 'small') {
+            const smallAction = ethers.toBigInt(4);
+            await pokerGameSingleton.playHand(smallAction, ethers.toBigInt(0), { gasLimit: 1000000 });
         }
     }
 

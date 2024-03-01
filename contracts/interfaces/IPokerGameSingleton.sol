@@ -14,7 +14,9 @@ interface IPokerGameSingleton {
         FOLD,
         CHECK,
         CALL, // matching the bet 
-        RAISE
+        RAISE,
+        SMALL_BLIND,
+        BIG_BLIND
     }
 
     struct PokerTable {

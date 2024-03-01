@@ -67,7 +67,7 @@ export const cliCommands = (game: Game) => {
             console.log("inside init ");
             console.log('Extra arguments ', argv);
         })
-        .command('action', 'Take some game action (raise, call, check)', actionBuilder, (argv) => {
+        .command('action', 'Take some game action (raise, call, check, big, small)', actionBuilder, (argv) => {
             const wallet = getWallet(argv.playerNo as number);
             const action = argv.action as string;
             const raiseAmount = argv.raiseAmount as number || 0;

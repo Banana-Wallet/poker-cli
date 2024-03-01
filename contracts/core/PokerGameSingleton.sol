@@ -29,15 +29,15 @@ contract PokerGameSingleton is IPokerGameSingleton {
             potValue: 0,
             bigBlind: 10,
             smallBlind: 5,
-            playerChips: new uint128[](100), // initially all players would be given 5 chips to play
+            playerChips: new uint128[](4), // initially all players would be given 5 chips to play
             gameEnded: false,
-            finalPoints: new uint128[](0)
+            finalPoints: new uint128[](4)
         });
 
         pokerRounds[0] = PokerRound({
             currentTurn: 0,
             highestChips: 0,
-            chips: new uint128[](0), // chips by player in the current round
+            chips: new uint128[](4), // chips by player in the current round
             gamePlayers: _players
         });
 
@@ -150,6 +150,31 @@ contract PokerGameSingleton is IPokerGameSingleton {
             _raiseAction(_raiseAmount);
         } else if (_action == PlayerAction.CHECK) {
             _checkAction();
+        } else if (_action == PlayerAction.SMALL_BLIND) {
+            require(_currentPokerRound.currentTurn == 0, "Not your turn to play small blind");
+            require(pokerTable.currentRound == 0, "Big blind can only be played in the first round");
+            chips[msg.sender] -= pokerTable.smallBlind;
+            pokerTable.potValue += pokerTable.smallBlind;
+            _currentPokerRound.currentTurn = _updateTurn(
+                _currentPokerRound.currentTurn,
+                _currentPokerRound.gamePlayers.length
+            );
+            // update highest chips
+            _currentPokerRound.highestChips = pokerTable.smallBlind;
+            _currentPokerRound.chips[_currentPokerRound.currentTurn] = pokerTable.smallBlind;
+        } else if (_action == PlayerAction.BIG_BLIND) {
+            require(_currentPokerRound.currentTurn == 1, "Not your turn to play big blind");
+            require(pokerTable.currentRound == 0, "Big blind can only be played in the first round");
+            chips[msg.sender] -= pokerTable.bigBlind;
+            pokerTable.potValue += pokerTable.bigBlind;
+            // update turn 
+            _currentPokerRound.currentTurn = _updateTurn(
+                _currentPokerRound.currentTurn,
+                _currentPokerRound.gamePlayers.length
+            );
+            // update highest chips
+            _currentPokerRound.highestChips = pokerTable.bigBlind;
+            _currentPokerRound.chips[_currentPokerRound.currentTurn] = pokerTable.bigBlind;
         }
 
         _endRound();
@@ -159,14 +184,12 @@ contract PokerGameSingleton is IPokerGameSingleton {
         PokerRound storage _currentPokerRound = pokerRounds[
             pokerTable.currentRound
         ];
-        uint128 _callAmount = _currentPokerRound.highestChips - 
-        _currentPokerRound.chips[_currentPokerRound.currentTurn];
-        require(
-            chips[msg.sender] >= _callAmount,
-            "Not enough chips to call"
-        );
+        uint128 _callAmount = _currentPokerRound.highestChips -
+            _currentPokerRound.chips[_currentPokerRound.currentTurn];
+        require(chips[msg.sender] >= _callAmount, "Not enough chips to call");
         chips[msg.sender] -= _callAmount;
         pokerTable.potValue += _callAmount;
+        _currentPokerRound.chips[_currentPokerRound.currentTurn] += _callAmount;
     }
 
     function _raiseAction(uint128 _raiseAmount) internal {
@@ -189,6 +212,7 @@ contract PokerGameSingleton is IPokerGameSingleton {
             _currentPokerRound.chips[_currentPokerRound.currentTurn] +
             _callAmount +
             _raiseAmount;
+        _currentPokerRound.chips[_currentPokerRound.currentTurn] = _currentPokerRound.highestChips;
     }
 
     function _checkAction() internal view {
@@ -238,13 +262,12 @@ contract PokerGameSingleton is IPokerGameSingleton {
             if (pokerTable.currentRound == 3) {
                 pokerTable.gameEnded = true;
                 _allotPoints();
-            }
-            else if (_currentPokerRound.currentTurn == _noOfPlayers - 1) {
+            } else if (_currentPokerRound.currentTurn == _noOfPlayers - 1) {
                 pokerTable.currentRound++;
                 pokerRounds[pokerTable.currentRound] = PokerRound({
                     currentTurn: 0,
                     highestChips: 0,
-                    chips: new uint128[](0), // chips by player in the current round
+                    chips: new uint128[](4), // chips by player in the current round
                     gamePlayers: _currentPokerRound.gamePlayers
                 });
             }
@@ -260,7 +283,9 @@ contract PokerGameSingleton is IPokerGameSingleton {
         return pokerTable;
     }
 
-    function pokerRoundStatus(uint8 _round) external view returns (PokerRound memory) {
+    function pokerRoundStatus(
+        uint8 _round
+    ) external view returns (PokerRound memory) {
         return pokerRounds[_round];
     }
 
