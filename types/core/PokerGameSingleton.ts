@@ -21,6 +21,64 @@ import type {
   TypedContractMethod,
 } from "../common";
 
+export declare namespace IPokerGameSingleton {
+  export type PokerRoundStruct = {
+    currentTurn: BigNumberish;
+    highestChips: BigNumberish;
+    chips: BigNumberish[];
+    gamePlayers: AddressLike[];
+  };
+
+  export type PokerRoundStructOutput = [
+    currentTurn: bigint,
+    highestChips: bigint,
+    chips: bigint[],
+    gamePlayers: string[]
+  ] & {
+    currentTurn: bigint;
+    highestChips: bigint;
+    chips: bigint[];
+    gamePlayers: string[];
+  };
+
+  export type PokerTableStruct = {
+    currentRound: BigNumberish;
+    buyInAmount: BigNumberish;
+    maxPlayers: BigNumberish;
+    players: AddressLike[];
+    potValue: BigNumberish;
+    bigBlind: BigNumberish;
+    smallBlind: BigNumberish;
+    playerChips: BigNumberish[];
+    gameEnded: boolean;
+    finalPoints: BigNumberish[];
+  };
+
+  export type PokerTableStructOutput = [
+    currentRound: bigint,
+    buyInAmount: bigint,
+    maxPlayers: bigint,
+    players: string[],
+    potValue: bigint,
+    bigBlind: bigint,
+    smallBlind: bigint,
+    playerChips: bigint[],
+    gameEnded: boolean,
+    finalPoints: bigint[]
+  ] & {
+    currentRound: bigint;
+    buyInAmount: bigint;
+    maxPlayers: bigint;
+    players: string[];
+    potValue: bigint;
+    bigBlind: bigint;
+    smallBlind: bigint;
+    playerChips: bigint[];
+    gameEnded: boolean;
+    finalPoints: bigint[];
+  };
+}
+
 export interface PokerGameSingletonInterface extends Interface {
   getFunction(
     nameOrSignature:
@@ -31,9 +89,12 @@ export interface PokerGameSingletonInterface extends Interface {
       | "playHand"
       | "playerCards"
       | "players"
+      | "pokerRoundStatus"
       | "pokerRounds"
       | "pokerTable"
+      | "pokerTableStatus"
       | "remainingCards"
+      | "resetGame"
   ): FunctionFragment;
 
   encodeFunctionData(functionFragment: "chips", values: [AddressLike]): string;
@@ -59,6 +120,10 @@ export interface PokerGameSingletonInterface extends Interface {
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "pokerRoundStatus",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "pokerRounds",
     values: [BigNumberish]
   ): string;
@@ -67,9 +132,14 @@ export interface PokerGameSingletonInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "pokerTableStatus",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "remainingCards",
     values?: undefined
   ): string;
+  encodeFunctionData(functionFragment: "resetGame", values?: undefined): string;
 
   decodeFunctionResult(functionFragment: "chips", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "deck", data: BytesLike): Result;
@@ -85,14 +155,23 @@ export interface PokerGameSingletonInterface extends Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "players", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "pokerRoundStatus",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "pokerRounds",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "pokerTable", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "pokerTableStatus",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "remainingCards",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "resetGame", data: BytesLike): Result;
 }
 
 export interface PokerGameSingleton extends BaseContract {
@@ -172,6 +251,12 @@ export interface PokerGameSingleton extends BaseContract {
 
   players: TypedContractMethod<[arg0: BigNumberish], [string], "view">;
 
+  pokerRoundStatus: TypedContractMethod<
+    [_round: BigNumberish],
+    [IPokerGameSingleton.PokerRoundStructOutput],
+    "view"
+  >;
+
   pokerRounds: TypedContractMethod<
     [arg0: BigNumberish],
     [[bigint, bigint] & { currentTurn: bigint; highestChips: bigint }],
@@ -181,19 +266,28 @@ export interface PokerGameSingleton extends BaseContract {
   pokerTable: TypedContractMethod<
     [],
     [
-      [bigint, bigint, bigint, bigint, bigint, bigint] & {
+      [bigint, bigint, bigint, bigint, bigint, bigint, boolean] & {
         currentRound: bigint;
         buyInAmount: bigint;
         maxPlayers: bigint;
         potValue: bigint;
         bigBlind: bigint;
         smallBlind: bigint;
+        gameEnded: boolean;
       }
     ],
     "view"
   >;
 
+  pokerTableStatus: TypedContractMethod<
+    [],
+    [IPokerGameSingleton.PokerTableStructOutput],
+    "view"
+  >;
+
   remainingCards: TypedContractMethod<[], [bigint], "view">;
+
+  resetGame: TypedContractMethod<[], [void], "nonpayable">;
 
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
@@ -237,6 +331,13 @@ export interface PokerGameSingleton extends BaseContract {
     nameOrSignature: "players"
   ): TypedContractMethod<[arg0: BigNumberish], [string], "view">;
   getFunction(
+    nameOrSignature: "pokerRoundStatus"
+  ): TypedContractMethod<
+    [_round: BigNumberish],
+    [IPokerGameSingleton.PokerRoundStructOutput],
+    "view"
+  >;
+  getFunction(
     nameOrSignature: "pokerRounds"
   ): TypedContractMethod<
     [arg0: BigNumberish],
@@ -248,20 +349,31 @@ export interface PokerGameSingleton extends BaseContract {
   ): TypedContractMethod<
     [],
     [
-      [bigint, bigint, bigint, bigint, bigint, bigint] & {
+      [bigint, bigint, bigint, bigint, bigint, bigint, boolean] & {
         currentRound: bigint;
         buyInAmount: bigint;
         maxPlayers: bigint;
         potValue: bigint;
         bigBlind: bigint;
         smallBlind: bigint;
+        gameEnded: boolean;
       }
     ],
     "view"
   >;
   getFunction(
+    nameOrSignature: "pokerTableStatus"
+  ): TypedContractMethod<
+    [],
+    [IPokerGameSingleton.PokerTableStructOutput],
+    "view"
+  >;
+  getFunction(
     nameOrSignature: "remainingCards"
   ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "resetGame"
+  ): TypedContractMethod<[], [void], "nonpayable">;
 
   filters: {};
 }

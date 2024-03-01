@@ -29,7 +29,9 @@ contract PokerGameSingleton is IPokerGameSingleton {
             potValue: 0,
             bigBlind: 10,
             smallBlind: 5,
-            playerChips: new uint128[](5) // initially all players would be given 5 chips to play
+            playerChips: new uint128[](100), // initially all players would be given 5 chips to play
+            gameEnded: false,
+            finalPoints: new uint128[](0)
         });
 
         pokerRounds[0] = PokerRound({
@@ -233,8 +235,11 @@ contract PokerGameSingleton is IPokerGameSingleton {
 
         // no raise
         if (isLevelGame) {
-            //! handle one case here that in case if teh current round of the table is 3 then we can move to the final card showdown
-            if (_currentPokerRound.currentTurn == _noOfPlayers - 1) {
+            if (pokerTable.currentRound == 3) {
+                pokerTable.gameEnded = true;
+                _allotPoints();
+            }
+            else if (_currentPokerRound.currentTurn == _noOfPlayers - 1) {
                 pokerTable.currentRound++;
                 pokerRounds[pokerTable.currentRound] = PokerRound({
                     currentTurn: 0,
@@ -248,6 +253,31 @@ contract PokerGameSingleton is IPokerGameSingleton {
                 _currentPokerRound.currentTurn,
                 _noOfPlayers
             );
+        }
+    }
+
+    function pokerTableStatus() external view returns (PokerTable memory) {
+        return pokerTable;
+    }
+
+    function pokerRoundStatus(uint8 _round) external view returns (PokerRound memory) {
+        return pokerRounds[_round];
+    }
+
+    // added just for testing for now can be called by anyone
+    function resetGame() external {
+        delete pokerTable;
+        delete pokerRounds[0];
+        delete deck;
+        delete hiddenCards;
+        delete players;
+        remainingCards = 52;
+    }
+
+    function _allotPoints() internal {
+        // for now just allotting 100 points to all players
+        for (uint8 i = 0; i < pokerTable.players.length; i++) {
+            pokerTable.finalPoints[i] = 100;
         }
     }
 }

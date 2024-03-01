@@ -28,17 +28,14 @@ export class Game {
     _initGame = async (signer: ethers.Wallet, players: string[]) => {
         const gameContract: GameContracts = this._getGameContracts(signer);
         const pokerGameSingleton = gameContract.pokerGameSingleton.connect(signer);
-        // initializing the game
         await pokerGameSingleton.initialize(players);
     }
 
     _action = async (signer: ethers.Wallet, _action: string, _raiseAmount: number) => {
         console.log('take some actions');
-        // for now considering raise amount would only pitch in case of raise action
         const gameContract: GameContracts = this._getGameContracts(signer);
         const pokerGameSingleton = gameContract.pokerGameSingleton.connect(signer);
         // taking action
-        
         if (_action === 'check') {
             const checkAction = ethers.toBigInt(0);
             await pokerGameSingleton.playHand(checkAction, 0);
@@ -50,6 +47,49 @@ export class Game {
             await pokerGameSingleton.playHand(raiseAction, _raiseAmount);
         } else {
             throw new Error('Invalid action');
+        }
+    }
+
+    _playerStats = async (signer: ethers.Wallet) => {
+        const gameContract: GameContracts = this._getGameContracts(signer);
+        const playerAddress = signer.address;
+
+        const playerCard1 = await gameContract.pokerGameSingleton.playerCards(playerAddress, ethers.toBigInt(0));
+        const playerCard2 = await gameContract.pokerGameSingleton.playerCards(playerAddress, ethers.toBigInt(1));
+
+        const CARDTYPES = ['Hearts', 'Diamonds', 'Clubs', 'Spades'];
+
+        const cardNumberP1 = playerCard1[0].toString();
+        const cardTypeP1 = playerCard1[1].toString();
+        const cardNumberP2 = playerCard2[0].toString();
+        const cardTypeP2 = playerCard2[1].toString();
+
+        console.log(`Card 1: ${cardNumberP1.toString()} of ${CARDTYPES[Number(cardTypeP1.toString())]}`);
+        console.log(`Card 2: ${cardNumberP2.toString()} of ${CARDTYPES[Number(cardTypeP2.toString())]}`);
+
+        const playerChips = await gameContract.pokerGameSingleton.chips(playerAddress);
+        console.log('Your Chips: ', playerChips.toString());
+    }
+
+    _gameStatus = async (signer: ethers.Wallet) => {
+        const gameContract: GameContracts = this._getGameContracts(signer);
+        const gameStatus = await gameContract.pokerGameSingleton.pokerTableStatus();
+        const currentRound = gameStatus[0].toString();
+        const currentRoundStatus = await gameContract.pokerGameSingleton.pokerRoundStatus(currentRound);
+        console.log('Current Round: ', currentRound);
+        console.log("Total Pot Value: ", gameStatus[4].toString());
+        if (gameStatus[8]) {
+            console.log('Game Ended');
+            console.log('Below are everyone\'s final points: ');
+            for (let i = 0; i < gameStatus[9].length; i++) {
+                console.log(`Player ${i + 1}: ${gameStatus[9][i].toString()}`);
+            }
+        }
+        console.log('Current Turn: ', currentRoundStatus[0].toString());
+        console.log('Highest Chips: ', currentRoundStatus[1].toString());
+        console.log('Chips by Players in this round ');
+        for (let i = 0; i < currentRoundStatus[2].length; i++) {
+            console.log(`Player ${i + 1}: ${currentRoundStatus[2][i].toString()}`);
         }
     }
 }

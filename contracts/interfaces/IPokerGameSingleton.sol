@@ -27,7 +27,8 @@ interface IPokerGameSingleton {
         uint8 bigBlind;
         uint8 smallBlind;
         uint128[] playerChips; // chips for each player
-        // IERC20 token; // the token to be used to play in the table
+        bool gameEnded;
+        uint128[] finalPoints;
     }
 
     // Round related stats 
