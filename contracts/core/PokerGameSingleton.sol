@@ -12,7 +12,7 @@ contract PokerGameSingleton is IPokerGameSingleton {
     address[] public players; // 0 -> small blind, 1 -> big blind and so on
 
     Card[5] public hiddenCards; // cards which are hidden
-    Card[52] public deck; // deck of cards 
+    Card[52] public deck; // deck of cards
 
     PokerTable public pokerTable;
     mapping(uint8 => PokerRound) public pokerRounds;
@@ -20,7 +20,7 @@ contract PokerGameSingleton is IPokerGameSingleton {
 
     uint8 public remainingCards = 52;
 
-    constructor(address[] memory _players) {
+    function initialize(address[] memory _players) external {
         // setting somethings here
         // initialize a poker table
         pokerTable = PokerTable({
@@ -37,7 +37,7 @@ contract PokerGameSingleton is IPokerGameSingleton {
         pokerRounds[0] = PokerRound({
             currentTurn: 0,
             highestChips: 0,
-            chips: new uint128[](0), // chips by player in the current round 
+            chips: new uint128[](0), // chips by player in the current round
             gamePlayers: _players
         });
 
@@ -64,17 +64,47 @@ contract PokerGameSingleton is IPokerGameSingleton {
     function _dealCards(address[] memory _players) internal {
         require(remainingCards >= 8, "Not enough cards remaining in the deck.");
 
-        for (uint8 _dealtCardIndex = 0; _dealtCardIndex < 2; _dealtCardIndex++) {
-            for(uint8 _playerIndex = 0; _playerIndex < _players.length; _playerIndex++) {
-                uint256 randIndex = uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, _dealtCardIndex))) % remainingCards;
+        for (
+            uint8 _dealtCardIndex = 0;
+            _dealtCardIndex < 2;
+            _dealtCardIndex++
+        ) {
+            for (
+                uint8 _playerIndex = 0;
+                _playerIndex < _players.length;
+                _playerIndex++
+            ) {
+                uint256 randIndex = uint256(
+                    keccak256(
+                        abi.encodePacked(
+                            block.timestamp,
+                            block.prevrandao,
+                            _dealtCardIndex
+                        )
+                    )
+                ) % remainingCards;
                 uint8 randCardIndex = uint8(randIndex);
-                playerCards[_players[_playerIndex]][_dealtCardIndex] = deck[randCardIndex];
+                playerCards[_players[_playerIndex]][_dealtCardIndex] = deck[
+                    randCardIndex
+                ];
                 _removeCardFromDeck(randCardIndex);
             }
         }
 
-        for(uint8 _hiddenCardIndex = 0; _hiddenCardIndex < 5; _hiddenCardIndex++) {
-            uint256 randIndex = uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, _hiddenCardIndex))) % remainingCards;
+        for (
+            uint8 _hiddenCardIndex = 0;
+            _hiddenCardIndex < 5;
+            _hiddenCardIndex++
+        ) {
+            uint256 randIndex = uint256(
+                keccak256(
+                    abi.encodePacked(
+                        block.timestamp,
+                        block.prevrandao,
+                        _hiddenCardIndex
+                    )
+                )
+            ) % remainingCards;
             uint8 randCardIndex = uint8(randIndex);
             hiddenCards[_hiddenCardIndex] = deck[randCardIndex];
             _removeCardFromDeck(randCardIndex);
@@ -82,7 +112,11 @@ contract PokerGameSingleton is IPokerGameSingleton {
     }
 
     function _allotChips(address[] memory _players) internal {
-        for(uint8 _playerIndex = 0; _playerIndex < _players.length; _playerIndex++) {
+        for (
+            uint8 _playerIndex = 0;
+            _playerIndex < _players.length;
+            _playerIndex++
+        ) {
             chips[_players[_playerIndex]] = 100; // alloting 100 chips to each player to play
         }
     }
@@ -96,82 +130,118 @@ contract PokerGameSingleton is IPokerGameSingleton {
     }
 
     function playHand(PlayerAction _action, uint128 _raiseAmount) external {
-        PokerRound storage _currentPokerRound = pokerRounds[pokerTable.currentRound];
-        require(_currentPokerRound.gamePlayers[_currentPokerRound.currentTurn] == msg.sender, "Not your turn to play");
-        // no fold for now 
-        require(_action != PlayerAction.FOLD, "Folding is not allowed in this version");
-        
-        if(_action == PlayerAction.CALL) {
+        PokerRound storage _currentPokerRound = pokerRounds[
+            pokerTable.currentRound
+        ];
+        require(
+            _currentPokerRound.gamePlayers[_currentPokerRound.currentTurn] ==
+                msg.sender,
+            "Not your turn to play"
+        );
+        // no fold for now
+        require(
+            _action != PlayerAction.FOLD,
+            "Folding is not allowed in this version"
+        );
+
+        if (_action == PlayerAction.CALL) {
             _callAction();
-        } else if(_action == PlayerAction.RAISE) {
+        } else if (_action == PlayerAction.RAISE) {
             _raiseAction(_raiseAmount);
-        } else if(_action == PlayerAction.CHECK) {
+        } else if (_action == PlayerAction.CHECK) {
             _checkAction();
         }
     }
 
     function _callAction() internal {
-        PokerRound storage _currentPokerRound = pokerRounds[pokerTable.currentRound];
-        uint128 _callAmount = _currentPokerRound.highestChips - _currentPokerRound.chips[_currentPokerRound.currentTurn];
+        PokerRound storage _currentPokerRound = pokerRounds[
+            pokerTable.currentRound
+        ];
+        uint128 _callAmount = _currentPokerRound.highestChips -
+            _currentPokerRound.chips[_currentPokerRound.currentTurn];
         chips[msg.sender] -= _callAmount;
         pokerTable.potValue += _callAmount;
     }
 
     function _raiseAction(uint128 _raiseAmount) internal {
-        PokerRound storage _currentPokerRound = pokerRounds[pokerTable.currentRound];
-        require(_raiseAmount > _currentPokerRound.highestChips, "Raise amount should be greater than the highest raise");
-        uint128 _callAmount = _currentPokerRound.highestChips - _currentPokerRound.chips[_currentPokerRound.currentTurn];
-        require(chips[msg.sender] >= _callAmount + _raiseAmount, "Not enough chips to raise");
-        
+        PokerRound storage _currentPokerRound = pokerRounds[
+            pokerTable.currentRound
+        ];
+        require(
+            _raiseAmount > _currentPokerRound.highestChips,
+            "Raise amount should be greater than the highest raise"
+        );
+        uint128 _callAmount = _currentPokerRound.highestChips -
+            _currentPokerRound.chips[_currentPokerRound.currentTurn];
+        require(
+            chips[msg.sender] >= _callAmount + _raiseAmount,
+            "Not enough chips to raise"
+        );
+
         chips[msg.sender] -= _callAmount + _raiseAmount;
         pokerTable.potValue += _callAmount + _raiseAmount;
-        _currentPokerRound.highestChips = _currentPokerRound.chips[_currentPokerRound.currentTurn] + _callAmount + _raiseAmount;
+        _currentPokerRound.highestChips =
+            _currentPokerRound.chips[_currentPokerRound.currentTurn] +
+            _callAmount +
+            _raiseAmount;
     }
 
-    function _checkAction() view internal {
-        PokerRound storage _currentPokerRound = pokerRounds[pokerTable.currentRound];
-        for(uint8 i = 0; i < _currentPokerRound.gamePlayers.length; i++) {
-            if(_currentPokerRound.chips[i] > 0) {
+    function _checkAction() internal view {
+        PokerRound storage _currentPokerRound = pokerRounds[
+            pokerTable.currentRound
+        ];
+        for (uint8 i = 0; i < _currentPokerRound.gamePlayers.length; i++) {
+            if (_currentPokerRound.chips[i] > 0) {
                 require(false, "Check is not possible");
             }
         }
     }
 
-    function _raiseOrNot(uint128[] memory _chips) internal pure returns (bool _raise){
+    function _raiseOrNot(
+        uint128[] memory _chips
+    ) internal pure returns (bool _raise) {
         uint128 _chip = _chips[0];
-        for(uint i=0; i < _chips.length; i++) {
-            if(_chips[i] != _chip) {
+        for (uint i = 0; i < _chips.length; i++) {
+            if (_chips[i] != _chip) {
                 _raise = false;
                 break;
             }
         }
     }
 
-    function _updateTurn(uint8 _currentTurn, uint _totalLength) internal pure returns(uint8) {
-        if(_currentTurn == _totalLength - 1) {
+    function _updateTurn(
+        uint8 _currentTurn,
+        uint _totalLength
+    ) internal pure returns (uint8) {
+        if (_currentTurn == _totalLength - 1) {
             return 0;
         } else {
             return _currentTurn + 1;
         }
     }
-    
+
     function _endRound() internal {
-        PokerRound storage _currentPokerRound = pokerRounds[pokerTable.currentRound];
+        PokerRound storage _currentPokerRound = pokerRounds[
+            pokerTable.currentRound
+        ];
         uint _noOfPlayers = _currentPokerRound.gamePlayers.length;
         bool isLevelGame = _raiseOrNot(_currentPokerRound.chips);
 
-        if(isLevelGame) {
-            if(_currentPokerRound.currentTurn == _noOfPlayers - 1) {
+        if (isLevelGame) {
+            if (_currentPokerRound.currentTurn == _noOfPlayers - 1) {
                 pokerTable.currentRound++;
                 pokerRounds[pokerTable.currentRound] = PokerRound({
                     currentTurn: 0,
                     highestChips: 0,
-                    chips: new uint128[](0), // chips by player in the current round 
+                    chips: new uint128[](0), // chips by player in the current round
                     gamePlayers: _currentPokerRound.gamePlayers
                 });
             }
         } else {
-            _currentPokerRound.currentTurn = _updateTurn(_currentPokerRound.currentTurn, _noOfPlayers);
+            _currentPokerRound.currentTurn = _updateTurn(
+                _currentPokerRound.currentTurn,
+                _noOfPlayers
+            );
         }
     }
 }

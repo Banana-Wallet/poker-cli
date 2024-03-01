@@ -7,7 +7,7 @@ import '../interfaces/IProxyCreationCallback.sol';
 /// @title Proxy Factory - Allows to create a new proxy contract and execute a message call to the new proxy within one transaction.
 /// @author Stefan George - <stefan@gnosis.pm>
 /// @author modified by CandideWallet Team
-contract BananaAccountProxyFactory {
+contract PokerGameProxyFactory {
     event ProxyCreation(PokerGameProxy proxy, address singleton);
 
     /// @dev Allows to retrieve the creation code used for the Proxy deployment. With this it is easily possible to calculate predicted address.
